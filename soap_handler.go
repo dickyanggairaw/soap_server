@@ -21,33 +21,27 @@ func SoapHandler(w http.ResponseWriter, r *http.Request, operations map[string]f
 	// Read the full request body
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("Error reading request body: %v", err)
 		sendSOAPFault(w, "Client", "Cannot read request body")
 		return
 	}
-
-	log.Printf("Received SOAP request: %s", string(bodyBytes))
 
 	// Parse the SOAP envelope - try multiple formats
 	var envelope SOAPEnvelope
 
 	// First try with soap: prefix
-	soapPrefixedBody := strings.Replace(string(bodyBytes), "<Envelope", "<soap:Envelope", 1)
-	soapPrefixedBody = strings.Replace(soapPrefixedBody, "</Envelope>", "</soap:Envelope>", 1)
-	soapPrefixedBody = strings.Replace(soapPrefixedBody, "<Body", "<soap:Body", 1)
-	soapPrefixedBody = strings.Replace(soapPrefixedBody, "</Body>", "</soap:Body>", 1)
+	// soapPrefixedBody := strings.Replace(string(bodyBytes), "<Envelope", "<soap:Envelope", 1)
+	// soapPrefixedBody = strings.Replace(soapPrefixedBody, "</Envelope>", "</soap:Envelope>", 1)
+	// soapPrefixedBody = strings.Replace(soapPrefixedBody, "<Body", "<soap:Body", 1)
+	// soapPrefixedBody = strings.Replace(soapPrefixedBody, "</Body>", "</soap:Body>", 1)
 
 	// Try parsing the original format first
 	err = xml.Unmarshal(bodyBytes, &envelope)
 	if err != nil {
-		log.Printf("Error decoding SOAP request: %v", err)
-		log.Printf("Raw body: %s", string(bodyBytes))
 		sendSOAPFault(w, "Client", "Invalid SOAP request format")
 		return
 	}
 	// Extract operation from body content
 	bodyContent := strings.TrimSpace(envelope.Body.Content)
-	log.Printf("Body content: %s", bodyContent)
 	var response interface{}
 	var foundMethod func(args string) interface{}
 	var foundMethodName string
@@ -63,7 +57,6 @@ func SoapHandler(w http.ResponseWriter, r *http.Request, operations map[string]f
 		fmt.Println("Method found:", foundMethodName)
 		response = foundMethod(bodyContent)
 	} else {
-		log.Printf("Unknown operation in body: %s", bodyContent)
 		sendSOAPFault(w, "Client", "Unknown operation")
 		return
 	}

@@ -1,4 +1,4 @@
-module soap-server
+module github.com/dickyanggairaw/soap_server
 
 go 1.24.3
 
